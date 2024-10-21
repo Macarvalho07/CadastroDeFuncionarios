@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import re
+import pwinput  # type: ignore
 
 funcionarios = []
 lixeira = []
@@ -12,6 +13,9 @@ GREEN = '\033[92m'
 RED = '\033[91m'
 YELLOW = '\033[93m'
 BLUE = '\033[94m'
+
+def limpar_terminal():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 # Função que valida o cpf
 def validar_cpf(cpf):
@@ -51,7 +55,7 @@ def verificar_cpf(cpf, estado):
 def senhas():
     senha_correta = '123456'
     while True:
-        senha = input(f'{CYAN}Digite a senha: {RESET}')
+        senha = pwinput.pwinput(f'{CYAN}Digite a senha: {RESET}')
         if senha == senha_correta:
             print(f'{GREEN}Senha correta!{RESET}')
             break
@@ -63,27 +67,48 @@ def menu():
     print(f'{CYAN}==== MENU ===={RESET}')
     print(f'{YELLOW}1. Cadastrar Funcionário')
     print(f'2. Listar Funcionários')
-    print(f'3. Remover Funcionário')
-    print(f'4. Editar Funcionário')
+    print(f'3. Editar Funcionários')
+    print(f'4. Remover Funcionário')
     print(f'5. Exibir Lixeira')
     print(f'6. Restaurar Funcionário da Lixeira')
-    print(f'7. Sair{RESET}')
+    print(f'7. Limpar Lixeira')
+    print(f'8. Sair{RESET}')
     print('='*20)
+   
 
 # Função para cadastrar funcionários
 def cadastro():
     nome = input(f'{CYAN}Nome: {RESET}')
     endereco = input(f'{CYAN}Endereço: {RESET}')
-    numero = int(input(f'{CYAN}Número: {RESET}'))
+    
+    # Verificação se o número é válido (apenas números)
+    numero = input(f'{CYAN}Número: {RESET}')
+    if not numero.isdigit():
+        print(f'{RED}O número deve ser composto apenas por dígitos.{RESET}')
+        return
+    
     bairro = input(f'{CYAN}Bairro: {RESET}')
     cidade = input(f'{CYAN}Cidade: {RESET}')
     estado = input(f'{CYAN}Estado: {RESET}')
-    cep = int(input(f'{CYAN}CEP: {RESET}'))
     
+    # Loop para garantir que o usuário digite um CEP válido
+    while True:
+        cep = input(f'{CYAN}CEP (8 dígitos): {RESET}')
+        if len(cep) == 8 and cep.isdigit():
+            break  # Se o CEP for válido, sai do loop
+        print(f'{RED}CEP inválido! O CEP deve ter exatamente 8 dígitos numéricos.{RESET}')
+    
+    # Verificação do CPF
     cpf = input(f'{CYAN}CPF (apenas números): {RESET}')
     if not verificar_cpf(cpf, estado):
         print(f'{RED}CPF inválido para o estado informado.{RESET}')
-        return
+        return  # Corrigido: "return" estava incompleto
+    
+    # Conversão dos campos numéricos após validação
+    numero = int(numero)
+    cep = int(cep)
+    
+    print(f'{GREEN}Cadastro realizado com sucesso!{RESET}')
 
     data_nascimento = input(f'{CYAN}Digite sua data de nascimento (XX/XX/XXXX): {RESET}')
     dia, mes, ano = map(int, data_nascimento.split('/'))
@@ -108,8 +133,10 @@ def cadastro():
     }
     funcionarios.append(funcionario)
     print(f'{GREEN}Funcionário {nome} cadastrado com sucesso!{RESET}')
+    limpar_terminal()
 
 # Função para listar funcionários
+
 def listar():
     if funcionarios:
         print('='*40)
@@ -120,13 +147,14 @@ def listar():
     else:
         print(f'{RED}Nenhum funcionário cadastrado{RESET}')
         print('='*40)
+limpar_terminal()
 
 # Função para remover funcionários
 def remover():
     if funcionarios:
         print(f'{CYAN}Funcionários disponíveis para remoção:{RESET}')
         for indice, funcionario in enumerate(funcionarios, start=1):
-            print(f'{indice}. {funcionario["Nome"]}')
+            print(f'{YELLOW}{indice}. {funcionario["Nome"]}{RESET}')
        
         escolha_funcionario = input(f'{CYAN}Qual funcionário deseja remover (número): {RESET}')
        
@@ -143,12 +171,15 @@ def remover():
     else:
         print(f'{RED}Nenhum funcionário cadastrado para remover.{RESET}')
 
+limpar_terminal()
+
 # Função para editar funcionários
+
 def editar():
     if funcionarios:
         print(f'{CYAN}Funcionários disponíveis para edição:{RESET}')
         for indice, funcionario in enumerate(funcionarios, start=1):
-            print(f'{indice}. Nome: {funcionario["Nome"]}, Endereço: {funcionario["Endereço"]}, Número: {funcionario["Número"]}, Bairro: {funcionario["Bairro"]}, Cidade: {funcionario["Cidade"]}, Estado: {funcionario["Estado"]}, CEP: {funcionario["CEP"]}, CPF: {funcionario["CPF"]}, Idade: {funcionario["Idade"]}, Data de nascimento: {funcionario["Data de nascimento"]}, Dependentes: {funcionario["Dependentes"]}, Cargo: {funcionario["Cargo"]}, Salário: {funcionario["Salário"]}.')
+            print(f'{indice}.\n{YELLOW}Nome: {funcionario["Nome"]}\nEndereço: {funcionario["Endereço"]}\nNúmero: {funcionario["Número"]}\nBairro: {funcionario["Bairro"]}\nCidade: {funcionario["Cidade"]}\nEstado: {funcionario["Estado"]}\nCEP: {funcionario["CEP"]}\nCPF: {funcionario["CPF"]}\nIdade: {funcionario["Idade"]}\nData de nascimento: {funcionario["Data de nascimento"]}\nDependentes: {funcionario["Dependentes"]}\nCargo: {funcionario["Cargo"]}\nSalário: {funcionario["Salário"]}{RESET}')
        
         escolha_funcionario = input(f'{CYAN}Qual funcionário deseja editar (número): {RESET}')
        
@@ -159,11 +190,16 @@ def editar():
                
                 print(f'{CYAN}Editando funcionário: {funcionario["Nome"]}{RESET}')
                 print(f'{YELLOW}Escolha um campo para editar:')
-                print(f'1. Nome\n2. Endereço\n3. Número\n4. Bairro\n5. Cidade\n6. Estado\n7. CEP\n8. Idade\n9. Data de nascimento\n10. Dependentes\n11. Cargo\n12. Salário{RESET}')
+                print(f'1. Nome\n2. Endereço\n3. Número\n4. Bairro\n5. Cidade\n6. Estado\n7. CEP\n8. Idade\n9. Data de nascimento\n10. Dependentes\n11. Cargo\n12. Salário\n13. Voltar ao Menu{RESET}')
                
                 campo = input(f'{CYAN}Campo a ser editado: {RESET}')
-                if campo.isdigit() and 1 <= int(campo) <= 12:
+                if campo.isdigit() and 1 <= int(campo) <= 13:
                     campo = int(campo)
+                    
+                    if campo == 13:  # Verificação para voltar ao menu
+                        print(f'{YELLOW}Voltando ao menu...{RESET}')
+                        return  # Encerra a função e volta ao menu principal
+                    
                     novo_valor = input(f'{CYAN}Novo valor: {RESET}')
                    
                     if campo == 1:
@@ -190,7 +226,7 @@ def editar():
                         funcionario['Cargo'] = novo_valor
                     elif campo == 12:
                         funcionario['Salário'] = novo_valor
-                   
+                        
                     print(f'{GREEN}Funcionário {funcionario["Nome"]} editado com sucesso.{RESET}')
                 else:
                     print(f'{RED}Escolha inválida.{RESET}')
@@ -201,23 +237,26 @@ def editar():
     else:
         print(f'{RED}Nenhum funcionário cadastrado para editar.{RESET}')
 
+limpar_terminal()
+
 # Função para exibir lixeira
 def exibir_lixeira():
     if lixeira:
         print(f'{BLUE}Funcionários na lixeira:{RESET}')
         for funcionario in lixeira:
-            print(f'{YELLOW}Nome: {funcionario["Nome"]}, Endereço: {funcionario["Endereço"]}, Número: {funcionario["Número"]}, Bairro: {funcionario["Bairro"]}, Cidade: {funcionario["Cidade"]}, Estado: {funcionario["Estado"]}, CEP: {funcionario["CEP"]}, CPF: {funcionario["CPF"]}, Idade: {funcionario["Idade"]}, Data de nascimento: {funcionario["Data de nascimento"]}, Dependentes: {funcionario["Dependentes"]}, Cargo: {funcionario["Cargo"]}, Salário: {funcionario["Salário"]}.{RESET}')
+            print(f'\n{YELLOW}Nome: {funcionario["Nome"]}\nEndereço: {funcionario["Endereço"]}\nNúmero: {funcionario["Número"]}\nBairro: {funcionario["Bairro"]}\nCidade: {funcionario["Cidade"]}\nEstado: {funcionario["Estado"]}\nCEP: {funcionario["CEP"]}\nCPF: {funcionario["CPF"]}\nIdade: {funcionario["Idade"]}\nData de nascimento: {funcionario["Data de nascimento"]}\nDependentes: {funcionario["Dependentes"]}\nCargo: {funcionario["Cargo"]}\nSalário: {funcionario["Salário"]}{RESET}')
     else:
         print(f'{RED}A lixeira está vazia.{RESET}')
+limpar_terminal()
 
 # Função para restaurar funcionários da lixeira
 def restaurar():
     if lixeira:
         print(f'{CYAN}Funcionários disponíveis na lixeira:{RESET}')
         for indice, funcionario in enumerate(lixeira, start=1):
-            print(f'{indice}. Nome: {funcionario["Nome"]}, Endereço: {funcionario["Endereço"]}, Número: {funcionario["Número"]}, Bairro: {funcionario["Bairro"]}, Cidade: {funcionario["Cidade"]}, Estado: {funcionario["Estado"]}, CEP: {funcionario["CEP"]}, CPF: {funcionario["CPF"]}, Idade: {funcionario["Idade"]}, Data de nascimento: {funcionario["Data de nascimento"]}, Dependentes: {funcionario["Dependentes"]}, Cargo: {funcionario["Cargo"]}, Salário: {funcionario["Salário"]}.')
+            print(f'{indice}.\n{YELLOW}Nome: {funcionario["Nome"]}\nEndereço: {funcionario["Endereço"]}\nNúmero: {funcionario["Número"]}\nBairro: {funcionario["Bairro"]}\nCidade: {funcionario["Cidade"]}\nEstado: {funcionario["Estado"]}\nCEP: {funcionario["CEP"]}\nCPF: {funcionario["CPF"]}\nIdade: {funcionario["Idade"]}\nData de nascimento: {funcionario["Data de nascimento"]}\nDependentes: {funcionario["Dependentes"]}\nCargo: {funcionario["Cargo"]}\nSalário: {funcionario["Salário"]}{RESET}')
         
-        escolha = input(f'{CYAN}Deseja restaurar um funcionário específico (1) ou todos (2)? {RESET}')
+        escolha = input(f'{CYAN}Deseja restaurar um funcionário específico (1) todos (2) ou voltar ao menu (3) ? {RESET}')
         
         if escolha == '1':
             escolha_funcionario = input(f'{CYAN}Qual funcionário deseja restaurar (número): {RESET}')
@@ -229,35 +268,50 @@ def restaurar():
                     print(f'{GREEN}Funcionário {funcionario_restaurado["Nome"]} restaurado com sucesso.{RESET}')
                 else:
                     print(f'{RED}Escolha inválida. Número fora do intervalo.{RESET}')
-            else:
-                print(f'{RED}Escolha inválida. Por favor, insira um número válido.{RESET}')
+            
         elif escolha == '2':
             funcionarios.extend(lixeira)
             lixeira.clear()
             print(f'{GREEN}Todos os funcionários foram restaurados com sucesso.{RESET}')
+        if escolha == '3':
+            print('voltando ao menu')
+                
+            
         else:
             print(f'{RED}Escolha inválida.{RESET}')
     else:
         print(f'{RED}A lixeira está vazia.{RESET}')        
 
+limpar_terminal()
+
+def limpar_lixeira():
+    lixeira.clear()
+    print(f'{GREEN}Lixeira limpa com sucesso.{RESET}')
+
+limpar_terminal()
+
 senhas()
+
 while True:
     menu()
     opcao = input(f'{CYAN}Escolha uma opção: {RESET}')
+    limpar_terminal()
     
     if opcao == '1':
         cadastro()
     elif opcao == '2':
         listar()
     elif opcao == '3':
-        remover()
-    elif opcao == '4':
         editar()
+    elif opcao == '4':
+        remover()
     elif opcao == '5':
         exibir_lixeira()
     elif opcao == '6':
-        restaurar()  
+        restaurar()
     elif opcao == '7':
+        limpar_lixeira()
+    elif opcao == '8':
         print(f'{GREEN}Saindo...{RESET}')
         break
     else:
