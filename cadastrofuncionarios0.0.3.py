@@ -243,9 +243,9 @@ limpar_terminal()
 def exibir_lixeira():
     if lixeira:
         print(f'{BLUE}Funcionários na lixeira:{RESET}')
-        for funcionario in lixeira:
-            print(f'\n{YELLOW}Nome: {funcionario["Nome"]}\nEndereço: {funcionario["Endereço"]}\nNúmero: {funcionario["Número"]}\nBairro: {funcionario["Bairro"]}\nCidade: {funcionario["Cidade"]}\nEstado: {funcionario["Estado"]}\nCEP: {funcionario["CEP"]}\nCPF: {funcionario["CPF"]}\nIdade: {funcionario["Idade"]}\nData de nascimento: {funcionario["Data de nascimento"]}\nDependentes: {funcionario["Dependentes"]}\nCargo: {funcionario["Cargo"]}\nSalário: {funcionario["Salário"]}{RESET}')
-    else:
+        for indice, funcionario in lixeira:
+            print(f'{indice}.\n{YELLOW}Nome: {funcionario["Nome"]} {RESET}')
+    else:    
         print(f'{RED}A lixeira está vazia.{RESET}')
 limpar_terminal()
 
